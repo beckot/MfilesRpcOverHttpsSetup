@@ -28,7 +28,7 @@ Param(
 Write-Host "1. Install the RPC over HTTP Proxy feature"
 Install-WindowsFeature RPC-over-HTTP-Proxy
 
-# 2. Set the following registry values:
+# 2. Set RpcProxy registry values.
 $Key = "HKEY_LOCAL_MACHINE\Software\Microsoft\Rpc\RpcProxy"
 If  ( -Not ( Test-Path "Registry::$Key")){New-Item -Path "Registry::$Key" -ItemType RegistryKey -Force}
 Set-ItemProperty -path "Registry::$Key" -Name "AllowAnonymous" -Type "DWord" -Value 1
@@ -37,7 +37,7 @@ $Key = "HKEY_LOCAL_MACHINE\Software\Microsoft\Rpc\RpcProxy"
 If  ( -Not ( Test-Path "Registry::$Key")){New-Item -Path "Registry::$Key" -ItemType RegistryKey -Force}
 Set-ItemProperty -path "Registry::$Key" -Name "ValidPorts" -Type "String" -Value ("{0}:4466" -f  $mfilesDns)
 	
-# 3. Add a new host entry to the end of C:\Windows\System32\drivers\etc\hosts:
+# 3. Map localhost to the public DNS in the hosts file to allow the RPC calls through. 
 Write-Host "3. Add host entry"
 $hosts_entries = @{}
 $hosts_entries.Add($mfilesDns, "127.0.0.1")
@@ -54,11 +54,11 @@ Set-WebConfigurationProperty `
 Set-WebConfigurationProperty `
 -pspath 'MACHINE/WEBROOT/APPHOST' `
 -location 'Default Web Site' `
--filter "system.webServer/security/authentication/anonymousAuthentication" `
+-filter "system.webServer/security/authentication/basicAuthentication" `
 -name "enabled" `
--value "True"
+-value "False"
 
-# 4a. Allow anonymous & basic authentication for Rpc virtual directory:
+# 4b. Allow anonymous & basic authentication for Rpc virtual directory:
 Set-WebConfigurationProperty `
 -pspath 'MACHINE/WEBROOT/APPHOST' `
 -location 'Default Web Site/Rpc' `
